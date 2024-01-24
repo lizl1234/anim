@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>ArcGIS JavaScript API - Create Points with Animal Pictures</title>
+  <style>
+    html,
+    body,
+    #viewDiv {
+      padding: 0;
+      margin: 0;
+      height: 100%;
+      width: 100%;
+    }
+
+    #topBar {
+      position: absolute;
+      top: 0;
+      width: 100%;
+      background-color: #3498db;
+      padding: 10px;
+      text-align: center;
+      color: #ffffff;
+      font-size: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+      z-index: 1;
+    }
+
+    #pointsCounter,
+    #progressTracker,
+    #icons {
+      display: inline-block;
+      margin-right: 20px;
+    }
+
+    .icon {
+      font-size: 24px;
+      color: #ffffff;
+      margin-left: 20px;
+      cursor: pointer;
+    }
+
+    #progressTracker {
+      color: #ffffff;
+      font-size: 20px;
+    }
+
+    #progressBar {
+      width: 100px;
+      height: 20px;
+      background-color: #ecf0f1;
+      border-radius: 10px;
+      display: inline-block;
+      margin-top: 5px;
+      overflow: hidden;
+      position: relative;
+    }
+
+    #progressFill {
+      height: 100%;
+      background-color: #2ecc71;
+      transition: width 0.5s ease;
+    }
+
+    #progressPercentage {
+      position: absolute;
+      top: 50%;
+      right: 5px;
+      transform: translate(0, -50%);
+      color: #ffffff;
+      font-size: 14px;
+    }
+
+    .icon {
+      font-family: 'Font Awesome 5 Free';
+      font-size: 24px;
+      color: #ffffff;
+      margin-left: 20px;
+      cursor: pointer;
+    }
+  </style>
+  <!-- Include Font Awesome stylesheet -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <link rel="stylesheet" href="https://js.arcgis.com/4.20/esri/themes/light/main.css">
+  <script src="https://js.arcgis.com/4.20/"></script>
+</head>
+
+<body>
+  <div id="topBar">
+    <div id="pointsCounter">Points: <span id="points">0</span></div>
+    <div id="progressTracker">
+      Progress:
+      <div id="progressBar">
+        <div id="progressFill"></div>
+        <div id="progressPercentage">0%</div>
+      </div>
+    </div>
+    <div id="icons">
+      <!-- Add Unicode characters for achievements and animal information icons -->
+      <!-- Add Unicode characters for achievements and animal information icons -->
+<!-- Add Unicode characters for achievements and animal information icons -->
+<span class="icon" id="achievementsIcon">&#x1F3C6;</span>
+<span class="icon" id="infoIcon">&#x2139;</span>
+<span class="icon customIcon" id="customizationIcon">
+  <img src="https://cdn-icons-png.flaticon.com/512/8694/8694747.png" alt="Customization Icon" width="24" height="24">
+</span>
+
+
+    </div>
+  </div>
+  <div id="viewDiv"></div>
+
+  <script>
+    require([
+      "esri/Map",
+      "esri/views/MapView",
+      "esri/Graphic",
+      "esri/geometry/Point",
+      "esri/symbols/PictureMarkerSymbol",
+      "esri/widgets/Popup"
+    ], function(Map, MapView, Graphic, Point, PictureMarkerSymbol, Popup) {
+
+      // Create a basemap
+      var map = new Map({
+        basemap: "streets"
+      });
+
+      // Create a 2D view
+      var view = new MapView({
+        container: "viewDiv",
+        map: map,
+        center: [0, 0], // Initial center coordinates (longitude, latitude)
+        zoom: 2, // Initial zoom level
+        popup: {
+          dockEnabled: true,
+          dockOptions: {
+            position: "bottom-right",
+            breakpoint: false
+          },
+          maxWidth: 400 // Set the desired maximum width of the popup
+        }
+      });
+
+      // Define coordinates for 5 points
+      var pointCoordinates = [
+        [20, 45],
+        [78, 25],
+        [-100, 45],
+        [20, 0],
+        [-60, -5]
+      ];
+
+      // Animal pictures for each point
+      var animalPictures = [
+        "https://th.bing.com/th/id/R.06f5b665b01445d940487f167f8bfbde?rik=ikvCwuIM1tTSZw&riu=http%3a%2f%2fpluspng.com%2fimg-png%2fpng-domestic-animals-rabbit-png-image-2737.png&ehk=v12uF%2bH0zNyQJTf%2f5XG6gd18kiOzkAxbH3NsD%2brHmiI%3d&risl=1&pid=ImgRaw&r=0.png",
+        "https://th.bing.com/th/id/R.d6496708a55602cdd5f4c7351654550c?rik=rHDUgBUL4o1Qxg&riu=http%3a%2f%2fwww.pngmart.com%2ffiles%2f7%2fAfrican-Elephant-PNG-File.png&ehk=b69KRhpJXtREzkvXqAS09L9TSVvFTUyMTgDnOKHC9kk%3d&risl=&pid=ImgRaw&r=0.png",
+        "https://th.bing.com/th/id/R.07bc6b23e7f1abac75383fbf8e942115?rik=sTE3lvEuC5bbOw&riu=http%3a%2f%2fpngimg.com%2fuploads%2fowl%2fowl_PNG2.png&ehk=j1EoBWaOODToWUJ1SD0oK3aPVW47j7AEq3yvq%2bzwcEs%3d&risl=&pid=ImgRaw&r=0.png",
+        "https://th.bing.com/th/id/R.bd2a222a3d018d33df8ab71aa0aea125?rik=dVerThQt9A%2bjww&pid=ImgRaw&r=0.png",
+        "https://cdn140.picsart.com/312073629012211.png"
+      ];
+
+      // Answer options for each point
+      var answerOptions = [
+        ["Cat", "Dog", "Rabbit", "Elephant"],
+        ["Lion", "Giraffe", "Elephant", "Zebra"],
+        ["Owl", "Eagle", "Parrot", "Penguin"],
+        ["Monkey", "Kangaroo", "Giraffe", "Elephant"],
+        ["Sparrow", "Dolphin", "Shark", "Whale"]
+      ];
+
+      // Create graphics for the points with animal pictures
+      for (var i = 0; i < pointCoordinates.length; i++) {
+        var point = new Point({
+          longitude: pointCoordinates[i][0],
+          latitude: pointCoordinates[i][1]
+        });
+
+        var correctAnswer = answerOptions[i][3]; // The correct answer is always the last one
+
+        var pictureSymbol = new PictureMarkerSymbol({
+          url: animalPictures[i],
+          width: "32px",
+          height: "32px"
+        });
+
+        var graphic = new Graphic({
+          geometry: point,
+          symbol: pictureSymbol,
+          attributes: {
+            answerOptions: answerOptions[i],
+            correctAnswer: correctAnswer
+          }
+        });
+
+        // Create a popup template for the graphic
+        var popupTemplate = {
+          title: "", // Empty title
+          content: [
+            {
+              type: "media",
+              mediaInfos: [{
+                type: "image",
+                value: {
+                  sourceURL: animalPictures[i],
+                  width: "350px", // Set the desired width of the image
+                  height: "250px" // Set the desired height of the image
+                }
+              }]
+            },
+            {
+              type: "text",
+              text: "Choose the correct answer."
+            }
+          ],
+          actions: []
+        };
+
+        // Add "Submit Answer" action to the popup template
+        popupTemplate.actions.push({
+          id: "answer",
+          title: "Submit Answer"
+        });
+
+        // Add answer options to the popup template
+        for (var j = 0; j < answerOptions[i].length; j++) {
+          popupTemplate.content.push({
+            type: "text",
+            text: (j + 1) + ". " + answerOptions[i][j]
+          });
+        }
+
+        // Add popup template to the graphic
+        graphic.popupTemplate = popupTemplate;
+
+        view.graphics.add(graphic);
+      }
+
+      // Listen for the "answer" action trigger
+      view.popup.on("trigger-action", function (event) {
+        if (event.action.id === "answer") {
+          var selectedAnswer = view.popup.selectedFeature.attributes.correctAnswer;
+          var userAnswer = event.target.content[1].text; // Extract user's selected answer
+          if (userAnswer === selectedAnswer) {
+            // Update points for correct answer
+            pointsCounter++;
+            pointsElement.textContent = pointsCounter;
+          }
+
+          // Update progress tracker
+          var progressPercentage = (pointsCounter / totalQuestions) * 100;
+          progressFillElement.style.width = progressPercentage + "%";
+          progressPercentageElement.textContent = progressPercentage.toFixed(2) + "%";
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
